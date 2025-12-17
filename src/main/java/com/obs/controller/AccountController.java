@@ -2,6 +2,7 @@ package com.obs.controller;
 
 import java.math.BigDecimal;
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
 
@@ -12,11 +13,12 @@ import org.springframework.web.bind.annotation.*;
 
 import com.obs.entity.Account;
 import com.obs.entity.AccountType;
+import com.obs.entity.Transaction;
 import com.obs.entity.User;
+import com.obs.payload.response.AccountDetailsResponse;
+import com.obs.payload.response.MessageResponse;
 import com.obs.repository.AccountRepository;
 import com.obs.repository.UserRepository;
-import com.obs.payload.response.MessageResponse;
-import com.obs.payload.response.AccountDetailsResponse;
 
 @CrossOrigin(origins = "http://localhost:5173", maxAge = 3600)
 @RestController
@@ -28,6 +30,9 @@ public class AccountController {
 
     @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    com.obs.repository.TransactionRepository transactionRepository;
 
     @GetMapping("/my-accounts")
     @PreAuthorize("hasRole('CUSTOMER') or hasRole('BANKER') or hasRole('ADMIN')")
@@ -100,10 +105,17 @@ public class AccountController {
         accountRepository.save(account);
         
         // Record Transaction
-         // Ideally inject TransactionRepository and save a CREDIT transaction here
-         // For brevity, skipping explicit transaction record or adding dependency here if not present.
-         // Let's rely on account update for now or I should add TransactionRepository dependency.
-         
+        Transaction transaction = new Transaction();
+        transaction.setAccount(account);
+        transaction.setAmount(amount); // Positive for Credit
+        transaction.setType("CREDIT");
+        transaction.setTimestamp(LocalDateTime.now());
+        transaction.setDescription("Cash Deposit by Banker");
+        transaction.setStatus("SUCCESS");
+        // targetAccountNumber is null for cash deposit
+
+        transactionRepository.save(transaction);
+
         return ResponseEntity.ok(new MessageResponse("Signal deposit successful. New balance: " + account.getBalance()));
     }
 

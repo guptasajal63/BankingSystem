@@ -1,18 +1,20 @@
 package com.obs.service;
 
-import com.obs.entity.Account;
-import com.obs.entity.BillPayment;
-import com.obs.entity.User;
-import com.obs.repository.AccountRepository;
-import com.obs.repository.BillPaymentRepository;
-import com.obs.repository.UserRepository;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
+import com.obs.entity.Account;
+import com.obs.entity.BillPayment;
+import com.obs.entity.Transaction;
+import com.obs.entity.User;
+import com.obs.repository.AccountRepository;
+import com.obs.repository.BillPaymentRepository;
+import com.obs.repository.UserRepository;
 
 @Service
 public class BillPaymentService {
@@ -25,6 +27,9 @@ public class BillPaymentService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private com.obs.repository.TransactionRepository transactionRepository;
 
     @Transactional
     public void payBill(Long userId, String fromAccountNumber, String billerName, BigDecimal amount) {
@@ -55,6 +60,16 @@ public class BillPaymentService {
         billPayment.setUser(user);
 
         billPaymentRepository.save(billPayment);
+
+        // Record Transaction
+        Transaction transaction = new Transaction();
+        transaction.setAccount(account);
+        transaction.setAmount(amount.negate()); // Debit
+        transaction.setType("DEBIT");
+        transaction.setTimestamp(LocalDateTime.now());
+        transaction.setDescription("Bill Payment: " + billerName);
+        transaction.setStatus("SUCCESS");
+        transactionRepository.save(transaction);
     }
 
     public List<BillPayment> getMyBills(Long userId) {

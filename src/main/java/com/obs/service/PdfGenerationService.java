@@ -1,22 +1,23 @@
 package com.obs.service;
 
+import java.io.ByteArrayOutputStream;
+import java.time.format.DateTimeFormatter;
+
+import org.springframework.stereotype.Service;
+
+import com.itextpdf.io.font.PdfEncodings;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
-import com.itextpdf.kernel.font.PdfFont;
-import com.itextpdf.kernel.font.PdfFontFactory;
-import com.itextpdf.io.font.PdfEncodings;
 import com.obs.entity.Account;
 import com.obs.entity.Transaction;
-import org.springframework.stereotype.Service;
-
-import java.io.ByteArrayOutputStream;
-import java.time.format.DateTimeFormatter;
 
 @Service
 public class PdfGenerationService {
@@ -38,28 +39,41 @@ public class PdfGenerationService {
             }
 
             document.add(new Paragraph("Online Banking System")
-                    .setBold().setFontSize(20).setTextAlignment(TextAlignment.CENTER));
-            document.add(new Paragraph("Transaction Invoice")
-                    .setBold().setFontSize(16).setTextAlignment(TextAlignment.CENTER));
-            document.add(new Paragraph("\n"));
+                    .setBold().setFontSize(24).setFontColor(com.itextpdf.kernel.colors.ColorConstants.BLUE)
+                    .setTextAlignment(TextAlignment.CENTER));
 
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            document.add(new Paragraph("Transaction Receipt")
+                    .setBold().setFontSize(18).setTextAlignment(TextAlignment.CENTER)
+                    .setMarginBottom(20));
 
-            document.add(new Paragraph("Transaction ID: " + transaction.getId()));
-            document.add(new Paragraph("Date: " + transaction.getTimestamp().format(formatter)));
-            document.add(new Paragraph("Transaction Type: " + transaction.getType()));
-            document.add(new Paragraph("Amount: " + currencySymbol + transaction.getAmount()));
-            document.add(new Paragraph("Description: " + (transaction.getDescription() != null ? transaction.getDescription() : "N/A")));
-            
+            float[] columnWidths = {1, 2};
+            Table table = new Table(UnitValue.createPercentArray(columnWidths));
+            table.setWidth(UnitValue.createPercentValue(100));
+
+            // Add a border to the table if desired, or keep it clean
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
+
+            addTableRow(table, "Transaction ID", transaction.getId().toString());
+            addTableRow(table, "Date & Time", transaction.getTimestamp().format(formatter));
+            addTableRow(table, "Transaction Type", transaction.getType());
+            addTableRow(table, "Amount", currencySymbol + transaction.getAmount().abs().toString()); // Show absolute amount
+            addTableRow(table, "Description", (transaction.getDescription() != null ? transaction.getDescription() : "N/A"));
+
             if (transaction.getAccount() != null) {
-                document.add(new Paragraph("Account Number: " + transaction.getAccount().getAccountNumber()));
+                addTableRow(table, "Account Number", transaction.getAccount().getAccountNumber());
             }
             if (transaction.getTargetAccountNumber() != null) {
-                 document.add(new Paragraph("Target Account: " + transaction.getTargetAccountNumber()));
+                addTableRow(table, "Target Account", transaction.getTargetAccountNumber());
             }
 
+            addTableRow(table, "Status", (transaction.getStatus() != null ? transaction.getStatus() : "COMPLETED"));
+
+            document.add(table);
+
             document.add(new Paragraph("\n"));
-            document.add(new Paragraph("Status: " + (transaction.getStatus() != null ? transaction.getStatus() : "COMPLETED")));
+            document.add(new Paragraph("Thank you for banking with us!")
+                    .setItalic().setTextAlignment(TextAlignment.CENTER).setFontSize(10));
 
             document.close();
         } catch (Exception e) {
@@ -124,5 +138,10 @@ public class PdfGenerationService {
             throw new RuntimeException("Error generating statement PDF");
         }
         return baos.toByteArray();
+    }
+    private void addTableRow(Table table, String label, String value) {
+        table.addCell(new Cell().add(new Paragraph(label).setBold()).setBorder(com.itextpdf.layout.borders.Border.NO_BORDER));
+        table.addCell(new Cell().add(new Paragraph(value)).setBorder(com.itextpdf.layout.borders.Border.NO_BORDER));
+        // Add a separator line if you want, or just spacing
     }
 }

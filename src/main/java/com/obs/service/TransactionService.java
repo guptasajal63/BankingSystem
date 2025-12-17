@@ -24,7 +24,7 @@ public class TransactionService {
     private TransactionRepository transactionRepository;
 
     @Transactional
-    public void transferFunds(TransferRequest transferRequest, String username) {
+    public String transferFunds(TransferRequest transferRequest, String username) {
         Account fromAccount = accountRepository.findByAccountNumber(transferRequest.getFromAccountNumber())
                 .orElseThrow(() -> new IllegalArgumentException("Source account not found"));
 
@@ -64,6 +64,8 @@ public class TransactionService {
             transaction.setDescription("Transfer to " + toAccount.getAccountNumber() + " (PENDING APPROVAL)");
             transaction.setStatus("PENDING");
             transactionRepository.save(transaction);
+
+            return "PENDING";
         } else {
             // Automatic Approval
             fromAccount.setBalance(fromAccount.getBalance().subtract(transferRequest.getAmount()));
@@ -93,6 +95,8 @@ public class TransactionService {
             creditTransaction.setDescription("Received from " + fromAccount.getAccountNumber());
             creditTransaction.setStatus("SUCCESS");
             transactionRepository.save(creditTransaction);
+
+            return "SUCCESS";
         }
     }
     
