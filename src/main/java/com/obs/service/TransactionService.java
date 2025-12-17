@@ -49,7 +49,7 @@ public class TransactionService {
 
         BigDecimal transferLimit = new BigDecimal("10000");
 
-        if (transferRequest.getAmount().compareTo(transferLimit) > 0) {
+        if (transferRequest.getAmount().compareTo(transferLimit) > 0 && fromAccount.getAccountType() != AccountType.CURRENT) {
             // High value transaction - HOLD funds and mark PENDING
              // Deduct from source immediately to lock funds (or move to reserved balance, but keeping simple here)
             fromAccount.setBalance(fromAccount.getBalance().subtract(transferRequest.getAmount()));
