@@ -25,7 +25,6 @@ import com.obs.repository.UserRepository;
 
 import jakarta.validation.Valid;
 
-@CrossOrigin(origins = "http://localhost:5173", maxAge = 3600)
 @RestController
 @RequestMapping("/api/admin")
 public class AdminController {
@@ -57,6 +56,7 @@ public class AdminController {
         user.setEmail(signUpRequest.getEmail());
         user.setPassword(encoder.encode(signUpRequest.getPassword()));
         user.setPhoneNumber(signUpRequest.getPhoneNumber());
+        user.setFullName(signUpRequest.getFullName());
 
         Set<Role> roles = new HashSet<>();
         roles.add(Role.BANKER);
@@ -91,14 +91,5 @@ public class AdminController {
         return ResponseEntity.ok(new MessageResponse("User " + (user.isActive() ? "activated" : "deactivated") + " successfully!"));
     }
 
-    @DeleteMapping("/users/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        if (!userRepository.existsById(id)) {
-             return ResponseEntity.badRequest().body(new MessageResponse("User not found"));
-        }
-        
-        userRepository.deleteById(id);
-        return ResponseEntity.ok(new MessageResponse("User and their accounts deleted successfully!"));
-    }
+
 }

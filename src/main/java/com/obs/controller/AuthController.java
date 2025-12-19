@@ -26,7 +26,6 @@ import com.obs.repository.UserRepository;
 import com.obs.security.JwtUtils;
 import com.obs.security.services.UserDetailsImpl;
 
-@CrossOrigin(origins = "http://localhost:5173", maxAge = 3600)
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -44,51 +43,44 @@ public class AuthController {
 
 	@PostMapping("/signin")
 	public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-		try {
-			Authentication authentication = authenticationManager.authenticate(
-					new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+		Authentication authentication = authenticationManager.authenticate(
+				new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
-			SecurityContextHolder.getContext().setAuthentication(authentication);
-			String jwt = jwtUtils.generateJwtToken(authentication);
+		SecurityContextHolder.getContext().setAuthentication(authentication);
+		String jwt = jwtUtils.generateJwtToken(authentication);
 
-			UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-			List<String> roles = userDetails.getAuthorities().stream()
-					.map(item -> item.getAuthority())
-					.collect(Collectors.toList());
+		UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+		List<String> roles = userDetails.getAuthorities().stream()
+				.map(item -> item.getAuthority())
+				.collect(Collectors.toList());
 
-			return ResponseEntity.ok(new JwtResponse(jwt,
-													 userDetails.getId(),
-													 userDetails.getUsername(),
-													 userDetails.getEmail(),
-													 roles));
-		} catch (org.springframework.security.authentication.BadCredentialsException e) {
-			return ResponseEntity.status(401).body(new MessageResponse("Error: Invalid username or password"));
-		} catch (Exception e) {
-			e.printStackTrace();
-			return ResponseEntity.status(500).body(new MessageResponse("Internal Server Error: " + e.getMessage()));
-		}
+		return ResponseEntity.ok(new JwtResponse(jwt,
+				userDetails.getId(),
+				userDetails.getUsername(),
+				userDetails.getFullName(),
+				userDetails.getEmail(),
+				userDetails.getPhoneNumber(),
+				roles));
+
 	}
 
 	@PostMapping("/signup")
 	public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
 		if (userRepository.existsByUsername(signUpRequest.getUsername())) {
-			return ResponseEntity
-					.badRequest()
-					.body(new MessageResponse("Error: Username is already taken!"));
+			throw new com.obs.exception.ConflictException("Username is already taken!");
 		}
 
 		if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-			return ResponseEntity
-					.badRequest()
-					.body(new MessageResponse("Error: Email is already in use!"));
+			throw new com.obs.exception.ConflictException("Email is already in use!");
 		}
 
 		// Create new user's account
 		User user = new User();
-        user.setUsername(signUpRequest.getUsername());
-        user.setEmail(signUpRequest.getEmail());
-        user.setPassword(encoder.encode(signUpRequest.getPassword()));
-        user.setPhoneNumber(signUpRequest.getPhoneNumber());
+		user.setUsername(signUpRequest.getUsername());
+		user.setEmail(signUpRequest.getEmail());
+		user.setPassword(encoder.encode(signUpRequest.getPassword()));
+		user.setPhoneNumber(signUpRequest.getPhoneNumber());
+		user.setFullName(signUpRequest.getFullName());
 
 		Set<String> strRoles = signUpRequest.getRole();
 		Set<Role> roles = new HashSet<>();
@@ -98,23 +90,23 @@ public class AuthController {
 		} else {
 			strRoles.forEach(role -> {
 				switch (role) {
-				case "admin":
-					roles.add(Role.ADMIN);
-					break;
-				case "banker":
-					roles.add(Role.BANKER);
-					break;
-				default:
-					roles.add(Role.CUSTOMER);
+					case "admin":
+						roles.add(Role.ADMIN);
+						break;
+					case "banker":
+						roles.add(Role.BANKER);
+						break;
+					default:
+						roles.add(Role.CUSTOMER);
 				}
 			});
 		}
 
-			user.setRoles(roles);
-			userRepository.save(user);
+		user.setRoles(roles);
+		userRepository.save(user);
 
-			return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+		return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
 
-		}
 	}
+}
 

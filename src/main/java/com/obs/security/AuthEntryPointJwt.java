@@ -18,8 +18,23 @@ public class AuthEntryPointJwt implements AuthenticationEntryPoint {
 
 	@Override
 	public void commence(HttpServletRequest request, HttpServletResponse response,
-			AuthenticationException authException) throws IOException, ServletException {
+						 AuthenticationException authException) throws IOException, ServletException {
 		logger.error("Unauthorized error: {}", authException.getMessage());
-		response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Error: Unauthorized");
+
+		response.setContentType(org.springframework.http.MediaType.APPLICATION_JSON_VALUE);
+		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
+		final com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+		mapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+		mapper.disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+		java.util.Map<String, Object> body = new java.util.LinkedHashMap<>();
+		body.put("timestamp", java.time.LocalDateTime.now().toString());
+		body.put("status", HttpServletResponse.SC_UNAUTHORIZED);
+		body.put("error", "Unauthorized");
+		body.put("message", authException.getMessage());
+		body.put("path", request.getServletPath());
+
+		mapper.writeValue(response.getOutputStream(), body);
 	}
 }

@@ -20,7 +20,8 @@ import jakarta.persistence.Table;
 @Table(name = "users")
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_seq")
+    @jakarta.persistence.SequenceGenerator(name = "user_seq", sequenceName = "obs_user_seq", initialValue = 100000001, allocationSize = 1)
     private Long id;
 
     @Column(unique = true, nullable = false)
@@ -45,6 +46,17 @@ public class User {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    @Column(nullable = false)
+    private String fullName;
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
     @ElementCollection(fetch = FetchType.EAGER)

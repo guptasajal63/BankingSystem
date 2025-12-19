@@ -54,13 +54,14 @@ public class PdfGenerationService {
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
 
-            addTableRow(table, "Transaction ID", transaction.getId().toString());
+            addTableRow(table, "Transaction ID", transaction.getTransactionId());
             addTableRow(table, "Date & Time", transaction.getTimestamp().format(formatter));
             addTableRow(table, "Transaction Type", transaction.getType());
             addTableRow(table, "Amount", currencySymbol + transaction.getAmount().abs().toString()); // Show absolute amount
             addTableRow(table, "Description", (transaction.getDescription() != null ? transaction.getDescription() : "N/A"));
 
             if (transaction.getAccount() != null) {
+                addTableRow(table, "Customer Name", transaction.getAccount().getUser().getFullName());
                 addTableRow(table, "Account Number", transaction.getAccount().getAccountNumber());
             }
             if (transaction.getTargetAccountNumber() != null) {
@@ -96,7 +97,7 @@ public class PdfGenerationService {
                 document.setFont(font);
                 currencySymbol = "\u20B9";
             } catch (Exception e) {
-                 System.err.println("Could not load font for Rupee symbol: " + e.getMessage());
+                System.err.println("Could not load font for Rupee symbol: " + e.getMessage());
             }
 
             document.add(new Paragraph("Online Banking System")
@@ -108,7 +109,7 @@ public class PdfGenerationService {
             document.add(new Paragraph("Account Number: " + account.getAccountNumber()));
             document.add(new Paragraph("Account Type: " + account.getAccountType()));
             document.add(new Paragraph("Current Balance: " + currencySymbol + account.getBalance()));
-            document.add(new Paragraph("User: " + account.getUser().getUsername()));
+            document.add(new Paragraph("Customer Name: " + account.getUser().getFullName()));
             document.add(new Paragraph("\n"));
 
             float[] columnWidths = {1, 3, 2, 2, 2};
@@ -124,7 +125,7 @@ public class PdfGenerationService {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
             for (Transaction t : transactions) {
-                table.addCell(t.getId().toString());
+                table.addCell(t.getTransactionId());
                 table.addCell(t.getTimestamp().format(formatter));
                 table.addCell(t.getType());
                 table.addCell(currencySymbol + t.getAmount().toString());

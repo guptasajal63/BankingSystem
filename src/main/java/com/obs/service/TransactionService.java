@@ -81,7 +81,7 @@ public class TransactionService {
             debitTransaction.setType("DEBIT");
             debitTransaction.setTimestamp(LocalDateTime.now());
             debitTransaction.setTargetAccountNumber(toAccount.getAccountNumber());
-            debitTransaction.setDescription("Transfer to " + toAccount.getAccountNumber());
+            debitTransaction.setDescription("Transfer to " +  toAccount.getUser().getUsername());
             debitTransaction.setStatus("SUCCESS");
             transactionRepository.save(debitTransaction);
 
@@ -92,7 +92,7 @@ public class TransactionService {
             creditTransaction.setType("CREDIT");
             creditTransaction.setTimestamp(LocalDateTime.now());
             creditTransaction.setTargetAccountNumber(fromAccount.getAccountNumber());
-            creditTransaction.setDescription("Received from " + fromAccount.getAccountNumber());
+            creditTransaction.setDescription("Received from " + fromAccount.getUser().getUsername());
             creditTransaction.setStatus("SUCCESS");
             transactionRepository.save(creditTransaction);
 
@@ -132,7 +132,7 @@ public class TransactionService {
         creditTransaction.setType("CREDIT");
         creditTransaction.setTimestamp(LocalDateTime.now());
         creditTransaction.setTargetAccountNumber(fromAccount.getAccountNumber());
-        creditTransaction.setDescription("Received from " + fromAccount.getAccountNumber());
+        creditTransaction.setDescription("Received from " + fromAccount.getUser().getUsername());
         creditTransaction.setStatus("SUCCESS");
         transactionRepository.save(creditTransaction);
     }
@@ -221,7 +221,7 @@ public class TransactionService {
         creditTransaction.setType("CREDIT");
         creditTransaction.setTimestamp(LocalDateTime.now());
         creditTransaction.setTargetAccountNumber(fromAccount.getAccountNumber());
-        creditTransaction.setDescription("Recurring Received from " + fromAccount.getAccountNumber());
+        creditTransaction.setDescription("Recurring Received from " + fromAccount.getUser().getUsername());
         creditTransaction.setStatus("SUCCESS");
         transactionRepository.save(creditTransaction);
     }

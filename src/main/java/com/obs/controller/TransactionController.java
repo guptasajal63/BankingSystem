@@ -22,7 +22,6 @@ import com.obs.service.TransactionService;
 
 import jakarta.validation.Valid;
 
-@CrossOrigin(origins = "http://localhost:5173", maxAge = 3600)
 @RestController
 @RequestMapping("/api/transactions")
 public class TransactionController {
@@ -89,16 +88,8 @@ public class TransactionController {
     public ResponseEntity<byte[]> downloadStatement(@PathVariable String accountNumber, Principal principal) {
         com.obs.entity.Account account = accountRepository.findByAccountNumber(accountNumber)
                 .orElseThrow(() -> new RuntimeException("Account not found"));
-        
-        // Verify ownership (if not banker)
-        // If user is banker, they might use the banker endpoint, but if they use this one, allow it (or block if handled by banker controller exclusively).
-        // Since @PreAuthorize allows BANKER, we should check if username matches OR if role is BANKER.
-        // For simplicity, let's assume this is primarily for the customer self-service.
+
         if (!account.getUser().getUsername().equals(principal.getName())) {
-             // throw exception or return 403
-             // Check if user is banker? No easy way to check role from Principal without casting.
-             // simpler to treat this as customer-facing. Bankers have their own controller.
-             // If a banker tries to access this for another user, it will fail this check.
              throw new IllegalArgumentException("Unauthorized access to account statement");
         }
 

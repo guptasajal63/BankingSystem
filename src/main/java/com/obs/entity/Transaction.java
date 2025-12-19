@@ -10,6 +10,11 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    public String getTransactionId() {
+        if (id == null) return null;
+        return String.format("TXN%08d", id);
+    }
+
     private BigDecimal amount;
 
     private LocalDateTime timestamp;

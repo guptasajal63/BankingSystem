@@ -14,7 +14,6 @@ import java.math.BigDecimal;
 import java.security.Principal;
 import java.util.List;
 
-@CrossOrigin(origins = "http://localhost:5173", maxAge = 3600)
 @RestController
 @RequestMapping("/api/bills")
 public class BillPaymentController {

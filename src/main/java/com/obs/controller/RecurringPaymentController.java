@@ -13,7 +13,6 @@ import jakarta.validation.Valid;
 import java.security.Principal;
 import java.util.List;
 
-@CrossOrigin(origins = "http://localhost:5173", maxAge = 3600)
 @RestController
 @RequestMapping("/api/recurring")
 public class RecurringPaymentController {
