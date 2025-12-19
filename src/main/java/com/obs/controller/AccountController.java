@@ -63,6 +63,10 @@ public class AccountController {
         account.setPanCardNumber(request.getPanCardNumber());
 
         if (request.getAccountType() == AccountType.CURRENT) {
+            if (request.getBusinessName() == null || request.getBusinessName().isEmpty() ||
+                    request.getBusinessAddress() == null || request.getBusinessAddress().isEmpty()) {
+                throw new IllegalArgumentException("Business Name and Address are required for Current Account.");
+            }
             account.setBusinessName(request.getBusinessName());
             account.setBusinessAddress(request.getBusinessAddress());
         }
